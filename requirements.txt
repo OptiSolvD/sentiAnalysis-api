@@ -1,7 +1,5 @@
 fastapi
 uvicorn
-torch
 transformers
-huggingface-hub
-sentencepiece
+torch
 numpy
