@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 import requests
 import os
@@ -9,7 +9,8 @@ HF_API_URL = "https://api-inference.huggingface.co/models/j-hartmann/emotion-eng
 HF_API_TOKEN = os.getenv("HF_API_TOKEN")
 
 headers = {
-    "Authorization": f"Bearer {HF_API_TOKEN}"
+    "Authorization": f"Bearer {HF_API_TOKEN}",
+    "Content-Type": "application/json"
 }
 
 class TextInput(BaseModel):
@@ -23,8 +24,16 @@ def analyze_emotion(data: TextInput):
 
     response = requests.post(HF_API_URL, headers=headers, json=payload)
 
+    # ✅ ADD THIS BLOCK
     if response.status_code != 200:
-        return {"error": "Hugging Face API error"}
+        raise HTTPException(
+            status_code=response.status_code,
+            detail={
+                "error": "Hugging Face API error",
+                "hf_status_code": response.status_code,
+                "hf_response": response.text
+            }
+        )
 
     results = response.json()[0]
 
@@ -35,3 +44,4 @@ def analyze_emotion(data: TextInput):
         "dominant_emotion": dominant,
         "emotion_scores": emotions
     }
+
